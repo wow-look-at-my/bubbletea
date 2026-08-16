@@ -1,4 +1,4 @@
-//go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris || aix || zos
+//go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris || aix || zos || cosmo
 // +build darwin dragonfly freebsd linux netbsd openbsd solaris aix zos
 
 package tea
