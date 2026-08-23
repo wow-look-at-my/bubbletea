@@ -3,6 +3,10 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   lint:
     uses: charmbracelet/meta/.github/workflows/lint.yml@main
