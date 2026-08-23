@@ -572,4 +572,3 @@ func (s *cursedRenderer) flush(closing bool) error {
 
 	return nil
 }
-

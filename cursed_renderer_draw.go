@@ -10,6 +10,7 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/x/ansi"
 )
+
 // render implements renderer.
 func (s *cursedRenderer) render(v View) {
 	s.mu.Lock()
