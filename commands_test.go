@@ -1,6 +1,7 @@
 package tea
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
@@ -11,9 +12,8 @@ func TestEvery(t *testing.T) {
 	msg := Every(time.Millisecond, func(t time.Time) Msg {
 		return expected
 	})()
-	if expected != msg {
-		t.Fatalf("expected a msg %v but got %v", expected, msg)
-	}
+	require.Equal(t, msg, expected)
+
 }
 
 func TestTick(t *testing.T) {
@@ -22,9 +22,8 @@ func TestTick(t *testing.T) {
 	msg := Tick(time.Millisecond, func(t time.Time) Msg {
 		return expected
 	})()
-	if expected != msg {
-		t.Fatalf("expected a msg %v but got %v", expected, msg)
-	}
+	require.Equal(t, msg, expected)
+
 }
 
 func TestBatch(t *testing.T) {
@@ -40,28 +39,26 @@ func TestSequence(t *testing.T) {
 func testMultipleCommands[T ~[]Cmd](t *testing.T, createFn func(cmd ...Cmd) Cmd) {
 	t.Run("nil cmd", func(t *testing.T) {
 		t.Parallel()
-		if b := createFn(nil); b != nil {
-			t.Fatalf("expected nil, got %+v", b)
-		}
+		require.Nil(t, createFn(nil))
+
 	})
 	t.Run("empty cmd", func(t *testing.T) {
 		t.Parallel()
-		if b := createFn(); b != nil {
-			t.Fatalf("expected nil, got %+v", b)
-		}
+		require.Nil(t, createFn())
+
 	})
 	t.Run("single cmd", func(t *testing.T) {
 		t.Parallel()
 		b := createFn(Quit)()
-		if _, ok := b.(QuitMsg); !ok {
-			t.Fatalf("expected a QuitMsg, got %T", b)
-		}
+		_, ok := b.(QuitMsg)
+		require.True(t, ok)
+
 	})
 	t.Run("mixed nil cmds", func(t *testing.T) {
 		t.Parallel()
 		b := createFn(nil, Quit, nil, Quit, nil, nil)()
-		if l := len(b.(T)); l != 2 {
-			t.Fatalf("expected a []Cmd with len 2, got %d", l)
-		}
+		l := len(b.(T))
+		require.Equal(t, 2, l)
+
 	})
 }

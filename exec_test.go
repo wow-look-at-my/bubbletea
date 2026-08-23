@@ -2,6 +2,8 @@ package tea
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os/exec"
 	"runtime"
 	"testing"
@@ -99,21 +101,18 @@ func TestTeaExec(t *testing.T) {
 				WithInput(&in),
 				WithOutput(&buf),
 			)
-			if _, err := p.Run(); err != nil {
-				t.Error(err)
-			}
+			_, err := p.Run()
+			assert.Nil(t, err)
+
 			p.renderer = &spyRenderer{renderer: p.renderer}
 
+			assert.False(t, m.err != nil && !test.expectErr)
 			if m.err != nil && !test.expectErr {
-				t.Errorf("expected no error, got %v", m.err)
+				assert.True(t, p.renderer.(*spyRenderer).calledReset, "expected renderer to be reset")
+			}
 
-				if !p.renderer.(*spyRenderer).calledReset {
-					t.Error("expected renderer to be reset")
-				}
-			}
-			if m.err == nil && test.expectErr {
-				t.Error("expected error, got nil")
-			}
+			assert.False(t, m.err == nil && test.expectErr)
+
 		})
 	}
 }
@@ -128,10 +127,9 @@ func TestTeaExecWithNilInput(t *testing.T) {
 		WithOutput(&buf),
 	)
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
-	if m.err != nil {
-		t.Fatalf("expected no error, got %v", m.err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
+
+	require.Nil(t, m.err)
+
 }
