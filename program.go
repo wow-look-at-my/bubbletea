@@ -19,6 +19,7 @@ import (
 	"github.com/charmbracelet/x/term"
 )
 
+// NewProgram creates a new [Program].
 func NewProgram(model Model, opts ...ProgramOption) *Program {
 	p := &Program{
 		initialModel: model,

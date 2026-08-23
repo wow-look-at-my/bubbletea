@@ -11,6 +11,13 @@ import (
 	"time"
 )
 
+// Send sends a message to the main update function, effectively allowing
+// messages to be injected from outside the program for interoperability
+// purposes.
+//
+// If the program hasn't started yet this will be a blocking operation.
+// If the program has already been terminated this will be a no-op, so it's safe
+// to send messages after the program has exited.
 func (p *Program) Send(msg Msg) {
 	select {
 	case <-p.ctx.Done():
