@@ -1,29 +1,14 @@
 package tea
 
 import (
-	"bytes"
-	"context"
-	"errors"
 	"fmt"
-	"image/color"
-	"io"
-	"log"
 	"os"
-	"os/signal"
-	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
-
-	"github.com/charmbracelet/colorprofile"
-	uv "github.com/charmbracelet/ultraviolet"
-	"github.com/charmbracelet/x/ansi"
-	"github.com/charmbracelet/x/term"
-	"github.com/muesli/cancelreader"
 )
 
 func (p *Program) Send(msg Msg) {
