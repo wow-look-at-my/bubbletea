@@ -288,8 +288,8 @@ func TestTeaKill(t *testing.T) {
 
 	require.True(t, errors.Is(err, ErrProgramKilled))
 
+	// Kill's internal context cancellation must not read as a context error to the caller.
 	require.False(t, errors.Is(err, context.Canceled))
-
 }
 
 func TestTeaContext(t *testing.T) {
