@@ -1,6 +1,8 @@
 package tea
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,19 +13,15 @@ func TestLogToFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "log.txt")
 	prefix := "logprefix"
 	f, err := LogToFile(path, prefix)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.Nil(t, err)
+
 	log.SetFlags(log.Lmsgprefix)
 	log.Println("some test log")
-	if closeErr := f.Close(); closeErr != nil {
-		t.Error(closeErr)
-	}
+	assert.NoError(t, f.Close())
+
 	out, err := os.ReadFile(path)
-	if err != nil {
-		t.Error(err)
-	}
-	if string(out) != prefix+" some test log\n" {
-		t.Fatalf("wrong log msg: %q", string(out))
-	}
+	assert.Nil(t, err)
+
+	require.Equal(t, prefix+" some test log\n", string(out))
+
 }

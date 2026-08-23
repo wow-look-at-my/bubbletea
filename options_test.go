@@ -3,6 +3,7 @@ package tea
 import (
 	"bytes"
 	"context"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"sync/atomic"
 	"testing"
@@ -13,33 +14,30 @@ func TestOptions(t *testing.T) {
 		t.Parallel()
 		var b bytes.Buffer
 		p := NewProgram(nil, WithOutput(&b))
-		if f, ok := p.output.(*os.File); ok {
-			t.Errorf("expected output to custom, got %v", f.Fd())
-		}
+		_, ok := p.output.(*os.File)
+		assert.False(t, ok)
+
 	})
 
 	t.Run("renderer", func(t *testing.T) {
 		t.Parallel()
 		p := NewProgram(nil, WithoutRenderer())
-		if !p.disableRenderer {
-			t.Errorf("expected renderer to be a nilRenderer, got %v", p.renderer)
-		}
+		assert.True(t, p.disableRenderer)
+
 	})
 
 	t.Run("without signals", func(t *testing.T) {
 		t.Parallel()
 		p := NewProgram(nil, WithoutSignals())
-		if atomic.LoadUint32(&p.ignoreSignals) == 0 {
-			t.Errorf("ignore signals should have been set")
-		}
+		assert.NotEqual(t, uint32(0), atomic.LoadUint32(&p.ignoreSignals))
+
 	})
 
 	t.Run("filter", func(t *testing.T) {
 		t.Parallel()
 		p := NewProgram(nil, WithFilter(func(_ Model, msg Msg) Msg { return msg }))
-		if p.filter == nil {
-			t.Errorf("expected filter to be set")
-		}
+		assert.NotNil(t, p.filter)
+
 	})
 
 	t.Run("external context", func(t *testing.T) {
@@ -48,9 +46,8 @@ func TestOptions(t *testing.T) {
 		defer extCancel()
 
 		p := NewProgram(nil, WithContext(extCtx))
-		if p.externalCtx != extCtx || p.externalCtx == context.Background() {
-			t.Errorf("expected passed in external context, got default")
-		}
+		assert.False(t, p.externalCtx != extCtx || p.externalCtx == context.Background())
+
 	})
 
 	t.Run("input options", func(t *testing.T) {
@@ -62,9 +59,8 @@ func TestOptions(t *testing.T) {
 		t.Run("nil input", func(t *testing.T) {
 			t.Parallel()
 			exercise(t, WithInput(nil), func(p *Program) {
-				if !p.disableInput || p.input != nil {
-					t.Errorf("expected input to be disabled, got %v", p.input)
-				}
+				assert.False(t, !p.disableInput || p.input != nil)
+
 			})
 		})
 
@@ -72,9 +68,8 @@ func TestOptions(t *testing.T) {
 			t.Parallel()
 			var b bytes.Buffer
 			exercise(t, WithInput(&b), func(p *Program) {
-				if p.input != &b {
-					t.Errorf("expected input to be custom, got %v", p.input)
-				}
+				assert.Equal(t, &b, p.input)
+
 			})
 		})
 	})
@@ -88,18 +83,16 @@ func TestOptions(t *testing.T) {
 		t.Run("without catch panics", func(t *testing.T) {
 			t.Parallel()
 			exercise(t, WithoutCatchPanics(), func(p *Program) {
-				if !p.disableCatchPanics {
-					t.Errorf("expected catch panics to be disabled")
-				}
+				assert.True(t, p.disableCatchPanics)
+
 			})
 		})
 
 		t.Run("without signal handler", func(t *testing.T) {
 			t.Parallel()
 			exercise(t, WithoutSignalHandler(), func(p *Program) {
-				if !p.disableSignalHandler {
-					t.Errorf("expected signal handler to be disabled")
-				}
+				assert.True(t, p.disableSignalHandler)
+
 			})
 		})
 	})

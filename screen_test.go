@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/exp/golden"
+	"github.com/stretchr/testify/require"
 )
 
 type testViewOpts struct {
@@ -150,9 +151,9 @@ func TestViewModel(t *testing.T) {
 
 			go p.Send(append(sequenceMsg(testViewOptsCmds(test.opts...)), Quit))
 
-			if _, err := p.Run(); err != nil {
-				t.Fatal(err)
-			}
+			_, err := p.Run()
+			require.Nil(t, err)
+
 			golden.RequireEqual(t, buf.Bytes())
 		})
 	}
@@ -198,9 +199,9 @@ func TestClearMsg(t *testing.T) {
 
 			go p.Send(append(test.cmds, Quit))
 
-			if _, err := p.Run(); err != nil {
-				t.Fatal(err)
-			}
+			_, err := p.Run()
+			require.Nil(t, err)
+
 			golden.RequireEqual(t, buf.Bytes())
 		})
 	}

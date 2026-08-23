@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io"
 	"strings"
 	"sync"
@@ -80,13 +82,11 @@ func TestTeaModel(t *testing.T) {
 		WithInput(&in),
 		WithOutput(&buf),
 	)
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
 
-	if buf.Len() == 0 {
-		t.Fatal("no output")
-	}
+	require.NotEqual(t, 0, buf.Len())
+
 }
 
 func TestTeaQuit(t *testing.T) {
@@ -109,9 +109,9 @@ func TestTeaQuit(t *testing.T) {
 		}
 	}()
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
+
 }
 
 func TestTeaWaitQuit(t *testing.T) {
@@ -163,9 +163,8 @@ func TestTeaWaitQuit(t *testing.T) {
 	wg.Wait()
 
 	err := <-errChan
-	if err != nil {
-		t.Fatalf("Expected nil, got %v", err)
-	}
+	require.Nil(t, err)
+
 }
 
 func TestTeaWaitKill(t *testing.T) {
@@ -217,9 +216,8 @@ func TestTeaWaitKill(t *testing.T) {
 	wg.Wait()
 
 	err := <-errChan
-	if !errors.Is(err, ErrProgramKilled) {
-		t.Fatalf("Expected %v, got %v", ErrProgramKilled, err)
-	}
+	require.True(t, errors.Is(err, ErrProgramKilled))
+
 }
 
 func TestTeaWithFilter(t *testing.T) {
@@ -259,12 +257,11 @@ func testTeaWithFilter(t *testing.T, preventCount uint32) {
 		}
 	}()
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
-	if shutdowns != preventCount {
-		t.Errorf("Expected %d prevented shutdowns, got %d", preventCount, shutdowns)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
+
+	assert.Equal(t, preventCount, shutdowns)
+
 }
 
 func TestTeaKill(t *testing.T) {
@@ -289,15 +286,10 @@ func TestTeaKill(t *testing.T) {
 
 	_, err := p.Run()
 
-	if !errors.Is(err, ErrProgramKilled) {
-		t.Fatalf("Expected %v, got %v", ErrProgramKilled, err)
-	}
+	require.True(t, errors.Is(err, ErrProgramKilled))
 
-	if errors.Is(err, context.Canceled) {
-		// The end user should not know about the program's internal context state.
-		// The program should only report external context cancellation as a context error.
-		t.Fatalf("Internal context cancellation was reported as context error!")
-	}
+	// Kill's internal context cancellation must not read as a context error to the caller.
+	require.False(t, errors.Is(err, context.Canceled))
 }
 
 func TestTeaContext(t *testing.T) {
@@ -324,14 +316,10 @@ func TestTeaContext(t *testing.T) {
 
 	_, err := p.Run()
 
-	if !errors.Is(err, ErrProgramKilled) {
-		t.Fatalf("Expected %v, got %v", ErrProgramKilled, err)
-	}
+	require.True(t, errors.Is(err, ErrProgramKilled))
 
-	if !errors.Is(err, context.Canceled) {
-		// The end user should know that their passed in context caused the kill.
-		t.Fatalf("Expected %v, got %v", context.Canceled, err)
-	}
+	require.True(t, errors.Is(err, context.Canceled))
+
 }
 
 func TestTeaContextImplodeDeadlock(t *testing.T) {
@@ -356,9 +344,9 @@ func TestTeaContextImplodeDeadlock(t *testing.T) {
 		}
 	}()
 
-	if _, err := p.Run(); !errors.Is(err, ErrProgramKilled) {
-		t.Fatalf("Expected %v, got %v", ErrProgramKilled, err)
-	}
+	_, err := p.Run()
+	require.True(t, errors.Is(err, ErrProgramKilled))
+
 }
 
 func TestTeaContextBatchDeadlock(t *testing.T) {
@@ -392,9 +380,9 @@ func TestTeaContextBatchDeadlock(t *testing.T) {
 		}
 	}()
 
-	if _, err := p.Run(); !errors.Is(err, ErrProgramKilled) {
-		t.Fatalf("Expected %v, got %v", ErrProgramKilled, err)
-	}
+	_, err := p.Run()
+	require.True(t, errors.Is(err, ErrProgramKilled))
+
 }
 
 func TestTeaBatchMsg(t *testing.T) {
@@ -424,13 +412,11 @@ func TestTeaBatchMsg(t *testing.T) {
 		}
 	}()
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
 
-	if m.counter.Load() != 2 {
-		t.Fatalf("counter should be 2, got %d", m.counter.Load())
-	}
+	require.Equal(t, 2, m.counter.Load())
+
 }
 
 func TestTeaSequenceMsg(t *testing.T) {
@@ -449,13 +435,11 @@ func TestTeaSequenceMsg(t *testing.T) {
 	)
 	go p.Send(sequenceMsg{inc, inc, Quit})
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
 
-	if m.counter.Load() != 2 {
-		t.Fatalf("counter should be 2, got %d", m.counter.Load())
-	}
+	require.Equal(t, 2, m.counter.Load())
+
 }
 
 func TestTeaSequenceMsgWithBatchMsg(t *testing.T) {
@@ -477,13 +461,11 @@ func TestTeaSequenceMsgWithBatchMsg(t *testing.T) {
 	)
 	go p.Send(sequenceMsg{batch, inc, Quit})
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
 
-	if m.counter.Load() != 3 {
-		t.Fatalf("counter should be 3, got %d", m.counter.Load())
-	}
+	require.Equal(t, 3, m.counter.Load())
+
 }
 
 func TestTeaNestedSequenceMsg(t *testing.T) {
@@ -502,13 +484,11 @@ func TestTeaNestedSequenceMsg(t *testing.T) {
 	)
 	go p.Send(sequenceMsg{inc, Sequence(inc, inc, Batch(inc, inc)), Quit})
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
 
-	if m.counter.Load() != 5 {
-		t.Fatalf("counter should be 5, got %d", m.counter.Load())
-	}
+	require.Equal(t, 5, m.counter.Load())
+
 }
 
 func TestTeaSend(t *testing.T) {
@@ -525,9 +505,8 @@ func TestTeaSend(t *testing.T) {
 	// sending before the program is started is a blocking operation
 	go p.Send(Quit())
 
-	if _, err := p.Run(); err != nil {
-		t.Fatal(err)
-	}
+	_, err := p.Run()
+	require.Nil(t, err)
 
 	// sending a message after program has quit is a no-op
 	p.Send(Quit())
@@ -567,13 +546,10 @@ func TestTeaPanic(t *testing.T) {
 
 	_, err := p.Run()
 
-	if !errors.Is(err, ErrProgramPanic) {
-		t.Fatalf("Expected %v, got %v", ErrProgramPanic, err)
-	}
+	require.True(t, errors.Is(err, ErrProgramPanic))
 
-	if !errors.Is(err, ErrProgramKilled) {
-		t.Fatalf("Expected %v, got %v", ErrProgramKilled, err)
-	}
+	require.True(t, errors.Is(err, ErrProgramKilled))
+
 }
 
 func TestTeaGoroutinePanic(t *testing.T) {
@@ -603,13 +579,10 @@ func TestTeaGoroutinePanic(t *testing.T) {
 
 	_, err := p.Run()
 
-	if !errors.Is(err, ErrProgramPanic) {
-		t.Fatalf("Expected %v, got %v", ErrProgramPanic, err)
-	}
+	require.True(t, errors.Is(err, ErrProgramPanic))
 
-	if !errors.Is(err, ErrProgramKilled) {
-		t.Fatalf("Expected %v, got %v", ErrProgramKilled, err)
-	}
+	require.True(t, errors.Is(err, ErrProgramKilled))
+
 }
 
 type benchModel struct {
@@ -662,9 +635,8 @@ func BenchmarkTeaRun(b *testing.B) {
 			}
 		}()
 
-		if _, err := p.Run(); err != nil {
-			b.Fatalf("Run failed: %v", err)
-		}
+		_, err := p.Run()
+		require.Nil(b, err)
 
 		_ = r.CloseWithError(io.EOF)
 	}
